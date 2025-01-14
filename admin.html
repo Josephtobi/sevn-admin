@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h2>Admin Dashboard</h2>
+            <button id="logoutBtn">Logout</button>
+        </header>
+        
+        <!-- Navigation Tabs -->
+        <nav class="tabs">
+            <button class="tablink active" data-tab="jobsTab">Jobs</button>
+            <button class="tablink" data-tab="contactsTab">Contacts</button>
+            <button class="tablink" data-tab="applicationsTab">Applications</button>
+        </nav>
+
+        <!-- Jobs Section -->
+        <section id="jobsTab" class="tabcontent active">
+            <h3>Jobs</h3>
+            <button id="addJobBtn">Add New Job</button>
+            <table id="jobsTable">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>Location</th>
+                        <th>Posted Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Jobs will be dynamically inserted here -->
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Contacts Section -->
+        <section id="contactsTab" class="tabcontent">
+            <h3>Contacts</h3>
+            <table id="contactsTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Subject</th>
+                        <th>Message</th>
+                       
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Contacts will be dynamically inserted here -->
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Applications Section -->
+        <section id="applicationsTab" class="tabcontent">
+            <h3>Applications</h3>
+            <table id="applicationsTable">
+                <thead>
+                    <tr>
+                        <th>Applicant Name</th>
+                        <th>Email</th>
+                        <th>Job ID</th>
+                        <th>Resume</th>
+                       
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Applications will be dynamically inserted here -->
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Modal for Adding/Editing Jobs -->
+        <div id="jobModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h3 id="modalTitle">Add New Job</h3>
+                <form id="jobForm">
+                    <input type="hidden" id="jobId" />
+                    <div class="form-group">
+                        <label for="title">Title:</label>
+                        <input type="text" id="title" name="title" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Description:</label>
+                        <textarea id="description" name="description" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="location">Location:</label>
+                        <input type="text" id="location" name="location" required />
+                    </div>
+                    <button type="submit" id="saveJobBtn">Save</button>
+                    <p id="jobError" class="error-message"></p>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
