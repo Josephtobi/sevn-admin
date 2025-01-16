@@ -255,6 +255,7 @@ if (window.location.pathname.endsWith("admin.html")) {
                 }
 
                 const jobs = await response.json();
+                print(jobs);
                 const job = jobs.find(j => j.id === jobId);
 
                 if (!job) {
@@ -330,7 +331,7 @@ if (window.location.pathname.endsWith("admin.html")) {
     // Delete Contact Function
     async function deleteContact(contactId) {
         try {
-            const response = await fetch(`${API_URL}/contacts/${contactId}`, {
+            const response = await fetch(`${API_URL}/contact/${contactId}`, {
                 method: "DELETE",
                 headers: {
                     "Authorization": `Bearer ${getToken()}`
