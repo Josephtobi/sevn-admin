@@ -19,12 +19,29 @@ function showError(elementId, message) {
     const el = document.getElementById(elementId);
     if (el) {
         el.textContent = message;
+        el.style.display = "block";
+    }
+}
+
+function showSuccess(message) {
+    const successEl = document.getElementById("successMessage");
+    if (successEl) {
+        successEl.textContent = message;
+        successEl.style.display = "block";
+        setTimeout(() => { successEl.style.display = "none"; }, 3000);
+    } else {
+        alert(message); // Fallback if no success element exists
     }
 }
 
 function formatDate(dateString) {
     const date = new Date(dateString);
     return date.toLocaleString();
+}
+
+function isValidUUID(id) {
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[4][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidPattern.test(id);
 }
 
 // Tab Functionality
@@ -93,8 +110,11 @@ if (window.location.pathname.endsWith("admin.html")) {
     const closeModal = document.querySelector(".close");
     const jobForm = document.getElementById("jobForm");
     const modalTitle = document.getElementById("modalTitle");
-    const saveJobBtn = document.getElementById("saveJobBtn");
     const jobError = document.getElementById("jobError");
+    const jobsError = document.getElementById("jobsError");
+    const contactsError = document.getElementById("contactsError");
+    const applicationsError = document.getElementById("applicationsError");
+    const successMessage = document.getElementById("successMessage");
 
     // Redirect to login if not authenticated
     if (!getToken()) {
@@ -117,14 +137,17 @@ if (window.location.pathname.endsWith("admin.html")) {
             });
 
             if (!response.ok) {
-                throw new Error("Failed to fetch jobs.");
+                const errorData = await response.json();
+                showError("jobsError", errorData.detail || "Failed to fetch jobs.");
+                return;
             }
 
             const jobs = await response.json();
             populateJobsTable(jobs);
+            showError("jobsError", ""); // Clear any previous errors
         } catch (error) {
             console.error("Fetch Jobs Error:", error);
-            alert("Could not fetch jobs. Please try again later.");
+            showError("jobsError", "Could not fetch jobs. Please try again later.");
         }
     }
 
@@ -158,14 +181,17 @@ if (window.location.pathname.endsWith("admin.html")) {
             });
 
             if (!response.ok) {
-                throw new Error("Failed to fetch contacts.");
+                const errorData = await response.json();
+                showError("contactsError", errorData.detail || "Failed to fetch contacts.");
+                return;
             }
 
             const contacts = await response.json();
             populateContactsTable(contacts);
+            showError("contactsError", ""); // Clear any previous errors
         } catch (error) {
             console.error("Fetch Contacts Error:", error);
-            alert("Could not fetch contacts. Please try again later.");
+            showError("contactsError", "Could not fetch contacts. Please try again later.");
         }
     }
 
@@ -199,14 +225,17 @@ if (window.location.pathname.endsWith("admin.html")) {
             });
 
             if (!response.ok) {
-                throw new Error("Failed to fetch applications.");
+                const errorData = await response.json();
+                showError("applicationsError", errorData.detail || "Failed to fetch applications.");
+                return;
             }
 
             const applications = await response.json();
             populateApplicationsTable(applications);
+            showError("applicationsError", ""); // Clear any previous errors
         } catch (error) {
             console.error("Fetch Applications Error:", error);
-            alert("Could not fetch applications. Please try again later.");
+            showError("applicationsError", "Could not fetch applications. Please try again later.");
         }
     }
 
@@ -233,37 +262,40 @@ if (window.location.pathname.endsWith("admin.html")) {
     // Open Modal for Adding Job
     addJobBtn.addEventListener("click", () => {
         modalTitle.textContent = "Add New Job";
-        jobForm.reset();
-        document.getElementById("jobId").value = "";
+        jobForm.reset(); // Clear all fields
+        document.getElementById("jobId").value = ""; // Clear hidden job ID
         jobError.textContent = "";
         jobModal.style.display = "block";
     });
 
-    // Open Modal for Editing Job
+    // Handle Edit and Delete Buttons for Jobs
     jobsTableBody.addEventListener("click", async (e) => {
         if (e.target.classList.contains("edit")) {
             const jobId = e.target.getAttribute("data-id");
+            
+            console.log(`Editing Job ID: ${jobId}`); // Log the job ID
+
+            if (!isValidUUID(jobId)) {
+                showError("jobsError", "Invalid job ID format.");
+                return;
+            }
+
             try {
-                const response = await fetch(`${API_URL}/jobs`, {
+                const response = await fetch(`${API_URL}/jobs/${jobId}`, {
                     headers: {
                         "Authorization": `Bearer ${getToken()}`
                     }
                 });
 
                 if (!response.ok) {
-                    throw new Error("Failed to fetch job details.");
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || "Failed to fetch job details.");
                 }
 
-                const jobs = await response.json();
-                const job = jobs.find(j => j.id === jobId);
-
-                if (!job) {
-                    alert("Job not found.");
-                    return;
-                }
+                const job = await response.json();
 
                 modalTitle.textContent = "Edit Job";
-                document.getElementById("jobId").value = job.id;
+                document.getElementById("jobId").value = job.id; // Corrected from job._id to job.id
                 document.getElementById("title").value = job.title;
                 document.getElementById("description").value = job.description;
                 document.getElementById("location").value = job.location;
@@ -271,116 +303,23 @@ if (window.location.pathname.endsWith("admin.html")) {
                 jobModal.style.display = "block";
             } catch (error) {
                 console.error("Edit Job Error:", error);
-                alert("Could not fetch job details.");
+                showError("jobsError", error.message);
             }
         }
 
-        // Delete Job
         if (e.target.classList.contains("delete")) {
             const jobId = e.target.getAttribute("data-id");
+            
+            console.log(`Deleting Job ID: ${jobId}`); // Log the job ID
+
+            if (!isValidUUID(jobId)) {
+                showError("jobsError", "Invalid job ID format.");
+                return;
+            }
+
             if (confirm("Are you sure you want to delete this job?")) {
                 deleteJob(jobId);
             }
-        }
-    });
-
-    // Delete Contact
-    contactsTableBody.addEventListener("click", async (e) => {
-        if (e.target.classList.contains("delete")) {
-            const contactId = e.target.getAttribute("data-id");
-            if (confirm("Are you sure you want to delete this contact?")) {
-                deleteContact(contactId);
-            }
-        }
-    });
-
-    // Delete Application
-    applicationsTableBody.addEventListener("click", async (e) => {
-        if (e.target.classList.contains("delete")) {
-            const applicationId = e.target.getAttribute("data-id");
-            if (confirm("Are you sure you want to delete this application?")) {
-                deleteApplication(applicationId);
-            }
-        }
-    });
-
-    // Delete Job Function
-    async function deleteJob(jobId) {
-        try {
-            const response = await fetch(`${API_URL}/jobs/${jobId}`, {
-                method: "DELETE",
-                headers: {
-                    "Authorization": `Bearer ${getToken()}`
-                }
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || "Failed to delete job.");
-            }
-
-            alert("Job deleted successfully.");
-            fetchJobs();
-        } catch (error) {
-            console.error("Delete Job Error:", error);
-            alert(error.message);
-        }
-    }
-
-    // Delete Contact Function
-    async function deleteContact(contactId) {
-        try {
-            const response = await fetch(`${API_URL}/contacts/${contactId}`, {
-                method: "DELETE",
-                headers: {
-                    "Authorization": `Bearer ${getToken()}`
-                }
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || "Failed to delete contact.");
-            }
-
-            alert("Contact deleted successfully.");
-            fetchContacts();
-        } catch (error) {
-            console.error("Delete Contact Error:", error);
-            alert(error.message);
-        }
-    }
-
-    // Delete Application Function
-    async function deleteApplication(applicationId) {
-        try {
-            const response = await fetch(`${API_URL}/applications/${applicationId}`, {
-                method: "DELETE",
-                headers: {
-                    "Authorization": `Bearer ${getToken()}`
-                }
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || "Failed to delete application.");
-            }
-
-            alert("Application deleted successfully.");
-            fetchApplications();
-        } catch (error) {
-            console.error("Delete Application Error:", error);
-            alert(error.message);
-        }
-    }
-
-    // Close Modal
-    closeModal.addEventListener("click", () => {
-        jobModal.style.display = "none";
-    });
-
-    window.addEventListener("click", (event) => {
-        if (event.target == jobModal) {
-            jobModal.style.display = "none";
         }
     });
 
@@ -429,12 +368,128 @@ if (window.location.pathname.endsWith("admin.html")) {
             }
 
             const result = await response.json();
-            alert(result.message || "Operation successful.");
+            showSuccess(result.message || "Operation successful.");
             jobModal.style.display = "none";
             fetchJobs();
         } catch (error) {
             console.error("Save Job Error:", error);
             showError("jobError", error.message);
+        }
+    });
+
+    // Handle Delete for Contacts
+    contactsTableBody.addEventListener("click", async (e) => {
+        if (e.target.classList.contains("delete")) {
+            const contactId = e.target.getAttribute("data-id");
+            
+            console.log(`Deleting Contact ID: ${contactId}`); // Log the contact ID
+
+            if (!isValidUUID(contactId)) {
+                showError("contactsError", "Invalid contact ID format.");
+                return;
+            }
+
+            if (confirm("Are you sure you want to delete this contact?")) {
+                deleteContact(contactId);
+            }
+        }
+    });
+
+    // Handle Delete for Applications
+    applicationsTableBody.addEventListener("click", async (e) => {
+        if (e.target.classList.contains("delete")) {
+            const applicationId = e.target.getAttribute("data-id");
+            
+            console.log(`Deleting Application ID: ${applicationId}`); // Log the application ID
+
+            if (!isValidUUID(applicationId)) {
+                showError("applicationsError", "Invalid application ID format.");
+                return;
+            }
+
+            if (confirm("Are you sure you want to delete this application?")) {
+                deleteApplication(applicationId);
+            }
+        }
+    });
+
+    // Delete Job Function
+    async function deleteJob(jobId) {
+        try {
+            const response = await fetch(`${API_URL}/jobs/${jobId}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${getToken()}`
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || "Failed to delete job.");
+            }
+
+            showSuccess("Job deleted successfully.");
+            fetchJobs();
+        } catch (error) {
+            console.error("Delete Job Error:", error);
+            showError("jobsError", error.message);
+        }
+    }
+
+    // Delete Contact Function
+    async function deleteContact(contactId) {
+        try {
+            const response = await fetch(`${API_URL}/contact/${contactId}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${getToken()}`
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || "Failed to delete contact.");
+            }
+
+            showSuccess("Contact deleted successfully.");
+            fetchContacts();
+        } catch (error) {
+            console.error("Delete Contact Error:", error);
+            showError("contactsError", error.message);
+        }
+    }
+
+    // Delete Application Function
+    async function deleteApplication(applicationId) {
+        try {
+            const response = await fetch(`${API_URL}/applications/${applicationId}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${getToken()}`
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || "Failed to delete application.");
+            }
+
+            showSuccess("Application deleted successfully.");
+            fetchApplications();
+        } catch (error) {
+            console.error("Delete Application Error:", error);
+            showError("applicationsError", error.message);
+        }
+    }
+
+    // Close Modal
+    closeModal.addEventListener("click", () => {
+        jobModal.style.display = "none";
+    });
+
+    window.addEventListener("click", (event) => {
+        if (event.target == jobModal) {
+            jobModal.style.display = "none";
         }
     });
 
