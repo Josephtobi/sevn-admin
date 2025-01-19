@@ -275,11 +275,6 @@ if (window.location.pathname.endsWith("admin.html")) {
             
             console.log(`Editing Job ID: ${jobId}`); // Log the job ID
 
-            if (!isValidUUID(jobId)) {
-                showError("jobsError", "Invalid job ID format.");
-                return;
-            }
-
             try {
                 const response = await fetch(`${API_URL}/jobs/${jobId}`, {
                     headers: {
@@ -311,11 +306,6 @@ if (window.location.pathname.endsWith("admin.html")) {
             const jobId = e.target.getAttribute("data-id");
             
             console.log(`Deleting Job ID: ${jobId}`); // Log the job ID
-
-            if (!isValidUUID(jobId)) {
-                showError("jobsError", "Invalid job ID format.");
-                return;
-            }
 
             if (confirm("Are you sure you want to delete this job?")) {
                 deleteJob(jobId);
@@ -384,11 +374,6 @@ if (window.location.pathname.endsWith("admin.html")) {
             
             console.log(`Deleting Contact ID: ${contactId}`); // Log the contact ID
 
-            if (!isValidUUID(contactId)) {
-                showError("contactsError", "Invalid contact ID format.");
-                return;
-            }
-
             if (confirm("Are you sure you want to delete this contact?")) {
                 deleteContact(contactId);
             }
@@ -401,11 +386,6 @@ if (window.location.pathname.endsWith("admin.html")) {
             const applicationId = e.target.getAttribute("data-id");
             
             console.log(`Deleting Application ID: ${applicationId}`); // Log the application ID
-
-            if (!isValidUUID(applicationId)) {
-                showError("applicationsError", "Invalid application ID format.");
-                return;
-            }
 
             if (confirm("Are you sure you want to delete this application?")) {
                 deleteApplication(applicationId);
